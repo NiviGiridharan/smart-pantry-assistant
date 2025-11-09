@@ -1,0 +1,504 @@
+{
+  "foods": [
+    {
+      "id": 1,
+      "name": "toor dal",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container in cool, dry place. Keep away from moisture."
+    },
+    {
+      "id": 2,
+      "name": "moong dal",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container. Lasts longer when kept dry."
+    },
+    {
+      "id": 3,
+      "name": "masoor dal",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container away from heat and humidity."
+    },
+    {
+      "id": 4,
+      "name": "chana dal",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container in pantry."
+    },
+    {
+      "id": 5,
+      "name": "sabudana",
+      "category": "starches",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container. Very long shelf life if kept dry."
+    },
+    {
+      "id": 6,
+      "name": "bindi",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 5,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Store in plastic bag in fridge. Use within 5 days for best quality."
+    },
+    {
+      "id": 7,
+      "name": "spinach",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Keep in plastic bag in fridge crisper drawer."
+    },
+    {
+      "id": 8,
+      "name": "fenugreek leaves",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 3,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Store in plastic bag. Use quickly for best freshness."
+    },
+    {
+      "id": 9,
+      "name": "coriander leaves",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Keep in damp paper towel in plastic bag."
+    },
+    {
+      "id": 10,
+      "name": "paneer",
+      "category": "dairy",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 10,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Keep in sealed container. Can be frozen for 1-2 months."
+    },
+    {
+      "id": 11,
+      "name": "milk",
+      "category": "dairy",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 10,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Keep at back of fridge. Check expiry date on package."
+    },
+    {
+      "id": 12,
+      "name": "yogurt",
+      "category": "dairy",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 14,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Keep sealed. Do not freeze. Use before date on package."
+    },
+    {
+      "id": 13,
+      "name": "ghee",
+      "category": "oils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Store in cool place. Solidifies in cold, liquefies in heat. Very stable."
+    },
+    {
+      "id": 14,
+      "name": "coconut oil",
+      "category": "oils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Solidifies below 75°F. Store in cool, dry place."
+    },
+    {
+      "id": 15,
+      "name": "mustard seeds",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container away from light and heat."
+    },
+    {
+      "id": 16,
+      "name": "cumin seeds",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container. Lasts very long when kept dry."
+    },
+    {
+      "id": 17,
+      "name": "turmeric powder",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container away from moisture and light."
+    },
+    {
+      "id": 18,
+      "name": "red chili powder",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in cool, dry place. Lose potency over time."
+    },
+    {
+      "id": 19,
+      "name": "coriander powder",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container. Best used within 6 months."
+    },
+    {
+      "id": 20,
+      "name": "garam masala",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container away from heat and light."
+    },
+    {
+      "id": 21,
+      "name": "rice",
+      "category": "grains",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container. White rice lasts longer than brown rice."
+    },
+    {
+      "id": 22,
+      "name": "wheat flour",
+      "category": "grains",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container in cool place. Keep away from pests."
+    },
+    {
+      "id": 23,
+      "name": "besan",
+      "category": "flours",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container. Can go rancid if not stored properly."
+    },
+    {
+      "id": 24,
+      "name": "semolina",
+      "category": "grains",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container away from moisture."
+    },
+    {
+      "id": 25,
+      "name": "eggs",
+      "category": "proteins",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 35,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep in original carton in coldest part of fridge. Check date on carton."
+    },
+    {
+      "id": 26,
+      "name": "tomato",
+      "category": "vegetables",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep at room temperature away from direct sunlight. Refrigerate if overripe."
+    },
+    {
+      "id": 27,
+      "name": "onion",
+      "category": "vegetables",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 60,
+      "shelf_life_shelf": 60,
+      "shelf_life_metric": "days",
+      "tips": "Store in cool, dark, well-ventilated place. Keep separate from potatoes."
+    },
+    {
+      "id": 28,
+      "name": "potato",
+      "category": "vegetables",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 60,
+      "shelf_life_shelf": 90,
+      "shelf_life_metric": "days",
+      "tips": "Store in cool, dark place. Do not refrigerate. Keep away from onions."
+    },
+    {
+      "id": 29,
+      "name": "garlic",
+      "category": "vegetables",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 60,
+      "shelf_life_shelf": 90,
+      "shelf_life_metric": "days",
+      "tips": "Store in cool, dark, well-ventilated place. Keep in paper bag."
+    },
+    {
+      "id": 30,
+      "name": "ginger",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 30,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Wrap in paper towel and store in plastic bag in fridge."
+    },
+    {
+      "id": 31,
+      "name": "broccoli",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Store in plastic bag in fridge crisper. Do not wash before storing."
+    },
+    {
+      "id": 32,
+      "name": "carrot",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 30,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Remove greens. Store in plastic bag in crisper drawer."
+    },
+    {
+      "id": 33,
+      "name": "cauliflower",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Keep in plastic bag. Do not wash before storing."
+    },
+    {
+      "id": 34,
+      "name": "bell pepper",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 14,
+      "shelf_life_shelf": 3,
+      "shelf_life_metric": "days",
+      "tips": "Store in plastic bag in crisper drawer."
+    },
+    {
+      "id": 35,
+      "name": "cucumber",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 2,
+      "shelf_life_metric": "days",
+      "tips": "Keep in plastic bag. Use quickly for best crispness."
+    },
+    {
+      "id": 36,
+      "name": "lettuce",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Store in plastic bag in crisper. Do not wash before storing."
+    },
+    {
+      "id": 37,
+      "name": "apple",
+      "category": "fruits",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 30,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep in plastic bag in crisper. Separate from other fruits."
+    },
+    {
+      "id": 38,
+      "name": "banana",
+      "category": "fruits",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep at room temperature. Refrigerate to slow ripening."
+    },
+    {
+      "id": 39,
+      "name": "mango",
+      "category": "fruits",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep at room temperature until ripe, then refrigerate."
+    },
+    {
+      "id": 40,
+      "name": "orange",
+      "category": "fruits",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 21,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Store in plastic bag in fridge. Keep separate from other fruits."
+    },
+    {
+      "id": 41,
+      "name": "lemon",
+      "category": "fruits",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 30,
+      "shelf_life_shelf": 14,
+      "shelf_life_metric": "days",
+      "tips": "Keep in plastic bag in fridge. Very long shelf life."
+    },
+    {
+      "id": 42,
+      "name": "bread",
+      "category": "bakery",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 14,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep in cool place. Refrigerate to extend life. Can freeze for months."
+    },
+    {
+      "id": 43,
+      "name": "butter",
+      "category": "dairy",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 90,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Keep sealed. Store at back of fridge. Can be frozen for 6-9 months."
+    },
+    {
+      "id": 44,
+      "name": "cheese",
+      "category": "dairy",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 30,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Keep wrapped. Separate cheeses to prevent cross-contamination."
+    },
+    {
+      "id": 45,
+      "name": "chickpeas",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store dried chickpeas in airtight container. Canned keep 2-5 years."
+    },
+    {
+      "id": 46,
+      "name": "kidney beans",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep dried beans in airtight container in cool, dry place."
+    },
+    {
+      "id": 47,
+      "name": "black lentils",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container. Used for dal makhani."
+    },
+    {
+      "id": 48,
+      "name": "peanuts",
+      "category": "nuts",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container in cool place. Can go rancid if not stored properly."
+    },
+    {
+      "id": 49,
+      "name": "cashews",
+      "category": "nuts",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container. Best stored in cool place."
+    },
+    {
+      "id": 50,
+      "name": "almonds",
+      "category": "nuts",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store in airtight container. Keep away from moisture and heat."
+    }
+  ]
+}
