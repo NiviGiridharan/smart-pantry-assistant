@@ -499,6 +499,76 @@
       "shelf_life_shelf": 365,
       "shelf_life_metric": "days",
       "tips": "Store in airtight container. Keep away from moisture and heat."
+    },
+    {
+      "id": 51,
+      "name": "mushroom",
+      "category": "vegetables",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": 1,
+      "shelf_life_metric": "days",
+      "tips": "Store in paper bag (not plastic) in fridge. Keep dry to prevent moisture buildup."
+    },
+    {
+      "id": 52,
+      "name": "canola oil",
+      "category": "oils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 730,
+      "shelf_life_metric": "days",
+      "tips": "Store in cool, dark place. Lasts very long when kept away from heat and light."
+    },
+    {
+      "id": 53,
+      "name": "dill weed",
+      "category": "spices",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": null,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Keep in airtight container away from light and heat. Dried herbs last long."
+    },
+    {
+      "id": 54,
+      "name": "mayonnaise",
+      "category": "condiments",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 180,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Store in fridge after opening. Keep sealed. Do not freeze."
+    },
+    {
+      "id": 55,
+      "name": "bread",
+      "category": "bakery",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 14,
+      "shelf_life_shelf": 7,
+      "shelf_life_metric": "days",
+      "tips": "Keep in cool place. Refrigerate to extend life. Can freeze for months."
+    },
+    {
+      "id": 60,
+      "name": "pesto",
+      "category": "condiments",
+      "recommended_storage": "fridge",
+      "shelf_life_fridge": 7,
+      "shelf_life_shelf": null,
+      "shelf_life_metric": "days",
+      "tips": "Store in fridge after opening. Keep sealed. Can freeze for 3-4 months."
+    },
+    {
+      "id": 61,
+      "name": "beans",
+      "category": "lentils",
+      "recommended_storage": "shelf",
+      "shelf_life_fridge": 3,
+      "shelf_life_shelf": 365,
+      "shelf_life_metric": "days",
+      "tips": "Store canned beans in cool, dry place. Once opened, transfer to fridge and use within 3-4 days."
     }
   ]
 }

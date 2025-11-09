@@ -9,15 +9,37 @@ from difflib import SequenceMatcher
 # Set Tesseract path
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# Load FoodKeeper data
+# DEBUG MODE (set to False to disable)
+DEBUG_MODE = True
+
 @st.cache_data
 def load_foodkeeper():
     try:
-        with open('foodkeeper.json', 'r', encoding='utf-8') as f:
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = os.path.join(current_dir, 'foodkeeper.json')
+        
+        if DEBUG_MODE:
+            print(f"DEBUG: Looking for file at: {filepath}")
+            print(f"DEBUG: File exists: {os.path.exists(filepath)}")
+        
+        with open(filepath, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return {food['name'].lower(): food for food in data['foods']}
-    except FileNotFoundError:
-        st.warning("⚠️ foodkeeper.json not found! Using default shelf life estimates.")
+    except FileNotFoundError as e:
+        st.warning(f"⚠️ foodkeeper.json not found at expected location")
+        if DEBUG_MODE:
+            print(f"DEBUG Error: {e}")
+        return {}
+    except json.JSONDecodeError as e:
+        st.warning(f"⚠️ Error reading foodkeeper.json (invalid JSON)")
+        if DEBUG_MODE:
+            print(f"DEBUG Error: {e}")
+        return {}
+    except Exception as e:
+        st.warning(f"⚠️ Error loading foodkeeper.json")
+        if DEBUG_MODE:
+            print(f"DEBUG Error: {e}")
         return {}
 
 FOODKEEPER = load_foodkeeper()
@@ -29,13 +51,28 @@ def fuzzy_match(item_name, threshold=0.6):
     best_match = None
     best_score = threshold
     
+    # First try: exact substring match (faster)
     for food_name in FOODKEEPER.keys():
-        score = SequenceMatcher(None, item_lower, food_name).ratio()
-        if score > best_score:
-            best_score = score
+        if food_name in item_lower or item_lower in food_name:
             best_match = food_name
+            best_score = 1.0
+            break
     
-    return FOODKEEPER.get(best_match) if best_match else None
+    # Second try: fuzzy matching if no exact match
+    if best_match is None:
+        for food_name in FOODKEEPER.keys():
+            score = SequenceMatcher(None, item_lower, food_name).ratio()
+            if score > best_score:
+                best_score = score
+                best_match = food_name
+    
+    result = FOODKEEPER.get(best_match) if best_match else None
+    
+    # DEBUG: Log matches
+    if DEBUG_MODE and result:
+        print(f"MATCHED: '{item_name}' -> '{best_match}' (score: {best_score:.2f})")
+    
+    return result
 
 def get_shelf_life(item_name):
     """Get shelf life info for an item"""
@@ -62,20 +99,55 @@ def get_shelf_life(item_name):
         }
 
 def parse_walmart_order(texts):
-    """Extract items from Walmart app screenshots (multiple images)
+    """Extract ALL items from Walmart app screenshots (multiple images)
     texts: list of OCR text from multiple Walmart app screenshots
     """
     items = []
     combined_text = '\n'.join(texts)
     lines = combined_text.split('\n')
     
+    # Keywords that indicate section headers or non-item lines to skip
+    skip_keywords = [
+        'delivered', 'items received', 'weight-adjusted', 'shopped', 'review item', 
+        'return eligible', 'delivery from', 'final weight', 'subtotal', 'driver tip',
+        'payment method', 'temporary hold', 'ending in', 'charge history',
+        'wove', 'congratulations', 'track order', 'contact', 'unavailable', 'how can we help',
+        'start a return', 'transaction activity', 'order#', 'your payment', 'charge',
+        'free delivery', 'sponsored'
+    ]
+    
+    #keywords to calcuate the total
+    totals_keywords = ['tax', 'total', 'subtotal', 'driver tip']
+    totals = {}
+
     i = 0
     while i < len(lines):
         line = lines[i].strip()
         line_lower = line.lower()
         
-        # Skip empty lines and headers
-        if not line or any(skip in line_lower for skip in ['delivered', 'items received', 'weight-adjusted', 'shopped', 'review item', 'return eligible', 'delivery from', 'final weight']):
+        # Skip empty lines
+        if not line:
+            i += 1
+            continue
+        
+        # Extract totals (tax, total, etc.) but don't add as items
+        if any(total_word in line_lower for total_word in totals_keywords):
+            price_match = re.search(r'\$(\d+[\.\s]\d{2})', line)
+            if price_match:
+                price = price_match.group(1).replace(' ', '.')
+                if 'tax' in line_lower:
+                    totals['tax'] = f'${price}'
+                elif 'subtotal' in line_lower:
+                    totals['subtotal'] = f'${price}'
+                elif 'driver tip' in line_lower:
+                    totals['driver_tip'] = f'${price}'
+                elif 'total' in line_lower and 'subtotal' not in line_lower:
+                    totals['total'] = f'${price}'
+            i += 1
+            continue
+
+        # Skip known non-item lines
+        if any(skip in line_lower for skip in skip_keywords):
             i += 1
             continue
         
@@ -86,11 +158,31 @@ def parse_walmart_order(texts):
             price = price_match.group(1).replace(' ', '.')
             item_name = line[:price_match.start()].strip()
             
+            # If item name is empty or very short, try to get it from previous lines (multi-line item names)
+            if not item_name or len(item_name) < 2:
+                # Look back up to 3 lines for item name
+                for back_idx in range(1, min(4, i+1)):
+                    prev_line = lines[i-back_idx].strip()
+                    prev_line_lower = prev_line.lower()
+                    
+                    # Skip if previous line is a skip keyword or unit price or totals
+                    if any(skip in prev_line_lower for skip in skip_keywords) or any(unit in prev_line_lower for unit in ['/lb', '/oz', '/fl', '/ea', 'multipack', 'qty']) or any(total in prev_line_lower for total in totals_keywords):
+                        continue
+                    
+                    # This line is likely part of item name
+                    if item_name:
+                        item_name = prev_line + " " + item_name
+                    else:
+                        item_name = prev_line
+            
+            # Skip if item name is still empty, too short, or just numbers/prices
+            if not item_name or len(item_name) < 2 or item_name.isdigit() or item_name.startswith('$'):
+                i += 1
+                continue
+            
             # Extract quantity from next few lines
             qty = 1
-            unit_price_line = ""
             j = i + 1
-            qty_found = False
             
             while j < len(lines) and j < i + 5:
                 next_line = lines[j].strip().lower()
@@ -99,38 +191,44 @@ def parse_walmart_order(texts):
                 qty_match = re.search(r'qty\s*(\d+)', next_line)
                 if qty_match:
                     qty = int(qty_match.group(1))
-                    qty_found = True
+                    break
                 
                 # Skip unit price lines ($/oz, $/fl oz, $/ea, etc.)
-                if any(unit in next_line for unit in ['/lb', '/oz', '/fl', '/ea', 'flavor:', 'size:', 'final weight']):
-                    unit_price_line = next_line
+                if any(unit in next_line for unit in ['/lb', '/oz', '/fl', '/ea', 'flavor:', 'size:', 'final weight', 'multipack']):
                     j += 1
                     continue
                 
-                # Stop at next price or empty line
-                if re.search(r'\$\d+[\.\s]\d{2}', next_line) and j > i + 1:
+                # Stop at next price or section header
+                if (re.search(r'\$\d+[\.\s]\d{2}', next_line) and j > i + 1) or any(skip in next_line for skip in skip_keywords):
                     break
                 
                 j += 1
             
-            if item_name and len(item_name) > 3:
-                shelf_data = get_shelf_life(item_name)
-                items.append({
-                    'name': item_name,
-                    'price': f'${price}',
-                    'qty': qty,
-                    'category': shelf_data['category'],
-                    'category_display': shelf_data.get('category', 'unknown'),
-                    'recommended_storage': shelf_data['recommended_storage'],
-                    'shelf_life_fridge': shelf_data['shelf_life_fridge'],
-                    'shelf_life_shelf': shelf_data['shelf_life_shelf'],
-                    'tips': shelf_data['tips'],
-                    'storage_location': 'unsorted',
-                    'expiry_days': None
-                })
-                
-                i = j
+            # Skip items that are fragments or don't have enough substance
+            word_count = len(item_name.split())
+            if word_count == 1 and len(item_name) < 5:
+                i += 1
                 continue
+            
+            # Add item (with or without foodkeeper match)
+            shelf_data = get_shelf_life(item_name)
+            items.append({
+                'name': item_name,
+                'price': f'${price}',
+                'qty': qty,
+                'category': shelf_data['category'],
+                'category_display': shelf_data.get('category', 'unknown'),
+                'recommended_storage': shelf_data['recommended_storage'],
+                'shelf_life_fridge': shelf_data['shelf_life_fridge'],
+                'shelf_life_shelf': shelf_data['shelf_life_shelf'],
+                'tips': shelf_data['tips'],
+                'storage_location': 'unsorted',
+                'expiry_days': None,
+                'is_produce': shelf_data['found']  # Track if it was matched to foodkeeper
+            })
+            
+            i = j
+            continue
         
         i += 1
     
@@ -138,7 +236,7 @@ def parse_walmart_order(texts):
     return items, totals
 
 def parse_receipt(text):
-    """Extract items, totals, and tax from receipt"""
+    """Extract ALL items from receipt (don't filter based on foodkeeper match)"""
     items = []
     totals = {}
     lines = text.split('\n')
@@ -177,7 +275,7 @@ def parse_receipt(text):
             if price_match:
                 price = price_match.group(1).replace(' ', '.')
                 item_name = line[:price_match.start()].strip()
-                if item_name and len(item_name) > 3:
+                if item_name and len(item_name) > 2:
                     # Get shelf life data from FoodKeeper
                     shelf_data = get_shelf_life(item_name)
                     items.append({
@@ -191,7 +289,8 @@ def parse_receipt(text):
                         'shelf_life_shelf': shelf_data['shelf_life_shelf'],
                         'tips': shelf_data['tips'],
                         'storage_location': 'unsorted',
-                        'expiry_days': None
+                        'expiry_days': None,
+                        'is_produce': shelf_data['found']  # Track if matched
                     })
     
     return items, totals
@@ -212,9 +311,6 @@ if 'selected_items' not in st.session_state:
     st.session_state.selected_items = []
 if 'order_type' not in st.session_state:
     st.session_state.order_type = None
-
-# DEBUG MODE (set to False to disable)
-DEBUG_MODE = True
 
 # Choose order type
 st.subheader("📱 What type of order?")
@@ -308,6 +404,15 @@ if uploaded_file:
     # Step 2: Show scanned results
     if st.session_state.scanned_items and st.session_state.step == 1:
         st.subheader("📦 Items Found:")
+        
+        # DEBUG: Show match quality
+        if DEBUG_MODE:
+            st.write("**🔍 Match Quality:**")
+            for item in st.session_state.scanned_items:
+                match_status = "✅ FoodKeeper matched" if item.get('is_produce') else "⚠️ Non-grocery item"
+                st.write(f"- `{item['name']}` → {match_status}")
+            st.divider()
+        
         for item in st.session_state.scanned_items:
             col1, col2, col3, col4 = st.columns([3, 1, 1, 2])
             with col1:
@@ -317,26 +422,54 @@ if uploaded_file:
             with col3:
                 st.write(f"{item['price']}")
             with col4:
-                if item['tips'] and 'No specific data' not in item['tips']:
-                    st.caption(f"✓ FoodKeeper matched")
+                if item.get('is_produce'):
+                    st.caption(f"✓ Grocery item")
                 else:
-                    st.caption(f"⚠️ Default estimate")
+                    st.caption(f"⚠️ Other item")
         
-        # Show receipt totals
-        st.subheader("💰 Receipt Summary:")
-        totals = st.session_state.totals
-        
-        if 'order_total' in totals:
-            st.write(f"Order Total: {totals['order_total']}")
-        if 'tax' in totals:
-            st.write(f"Sales Tax: {totals['tax']}")
-        if 'grand_total' in totals:
-            st.write(f"**Grand Total: {totals['grand_total']}**")
+        # Show receipt totals (only for non-Walmart)
+        if not st.session_state.totals.get('walmart_order'):
+            st.subheader("💰 Receipt Summary:")
+            totals = st.session_state.totals
+            
+            if 'order_total' in totals:
+                st.write(f"Order Total: {totals['order_total']}")
+            if 'tax' in totals:
+                st.write(f"Sales Tax: {totals['tax']}")
+            if 'grand_total' in totals:
+                st.write(f"**Grand Total: {totals['grand_total']}**")
         
         # Next button
-        if st.button("Next: Select My Items"):
-            st.session_state.step = 2
+        if st.button("Next: Filter What to Track"):
+            st.session_state.step = 1.5
             st.rerun()
+    
+    # Step 1.5: Filter produce vs non-grocery items
+    if st.session_state.get('step') == 1.5:
+        st.subheader("🥕 Select What to Track")
+        st.write("Check items you want to track in your pantry. Uncheck non-grocery items like gift bags, toothpaste, etc.")
+        
+        filtered_items = []
+        for i, item in enumerate(st.session_state.scanned_items):
+            # Default checked if it's produce, unchecked if it's not
+            default_checked = item.get('is_produce', False)
+            is_selected = st.checkbox(
+                f"{item['name']} ({item['category'].capitalize()}) - {item['price']}", 
+                value=default_checked, 
+                key=f"filter_{i}"
+            )
+            if is_selected:
+                filtered_items.append(item)
+        
+        st.write(f"**Tracking: {len(filtered_items)} out of {len(st.session_state.scanned_items)} items**")
+        
+        if filtered_items:
+            if st.button("Next: Select Your Items →", type="primary"):
+                st.session_state.scanned_items = filtered_items
+                st.session_state.step = 2
+                st.rerun()
+        else:
+            st.button("Next: Select Your Items →", disabled=True, help="Select at least one item to track")
     
     # Step 3: Item selection
     if st.session_state.get('step') == 2:
