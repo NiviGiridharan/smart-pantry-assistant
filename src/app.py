@@ -283,7 +283,7 @@ with col1:
         st.session_state.order_type = "receipt"
 
 with col2:
-    if st.button("📲 Walmart Online", use_container_width=True):
+    if st.button("📲 Online Reciept", use_container_width=True):
         st.session_state.order_type = "walmart"
 
 if st.session_state.order_type is None:
@@ -294,7 +294,7 @@ if st.session_state.order_type is None:
 if st.session_state.order_type == "receipt":
     uploaded_file = st.file_uploader("Choose a receipt image", type=['png', 'jpg', 'jpeg'])
 else:
-    uploaded_files = st.file_uploader("Upload Walmart app screenshots (multiple OK)", 
+    uploaded_files = st.file_uploader("Upload app screenshots (multiple OK)", 
                                       type=['png', 'jpg', 'jpeg'], 
                                       accept_multiple_files=True)
     uploaded_file = uploaded_files if uploaded_files else None
@@ -446,8 +446,46 @@ if uploaded_file:
         col1, col2 = st.columns([3, 1])
         
         with col1:
-            total = sum(item['price'] * item['qty'] for item in edited_items)
-            st.write(f"**Total: ${total:.2f}** • {len(edited_items)} items")
+            subtotal = sum(item['price'] * item['qty'] for item in edited_items)
+            
+            # Initialize editing state
+            if 'editing_totals' not in st.session_state:
+                st.session_state.editing_totals = False
+            
+            # Get tax value
+            default_tax = 0.00
+            if st.session_state.totals.get('tax'):
+                default_tax = float(st.session_state.totals['tax'].replace('$', ''))
+            
+            # Display mode
+            if not st.session_state.editing_totals:
+                st.write(f"**Subtotal: ${subtotal:.2f}** ({len(edited_items)} items)")
+                st.write(f"**Tax: ${default_tax:.2f}**")
+                st.write(f"**Grand Total: ${subtotal + default_tax:.2f}**")
+                
+                if st.button("✏️ Edit Tax", key="enable_edit_tax"):
+                    st.session_state.editing_totals = True
+                    st.rerun()
+            
+            # Edit mode
+            else:
+                st.write(f"**Subtotal: ${subtotal:.2f}** ({len(edited_items)} items)")
+                
+                tax_amount = st.number_input(
+                    "Tax:",
+                    value=default_tax,
+                    min_value=0.00,
+                    step=0.01,
+                    format="%.2f",
+                    key="edit_tax"
+                )
+                
+                st.write(f"**Grand Total: ${subtotal + tax_amount:.2f}**")
+                
+                if st.button("✅ Save Tax", key="save_tax"):
+                    st.session_state.totals['tax'] = f"${tax_amount:.2f}"
+                    st.session_state.editing_totals = False
+                    st.rerun()
         
         with col2:
             if edited_items:
@@ -458,7 +496,7 @@ if uploaded_file:
                     st.rerun()
             else:
                 st.button("Next: Match Items →", disabled=True, help="Add at least one item")
-    
+            
     # ========================================================================
     # Step 2: FILTER GROCERY ITEMS
     # ========================================================================
