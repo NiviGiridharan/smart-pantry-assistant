@@ -536,7 +536,7 @@ if uploaded_file:
         
         with col2:
             if filtered_items:
-                if st.button("Next: Select Your Items →", type="primary", use_container_width=True):
+                if st.button("Next: Organize Pantry →", type="primary", use_container_width=True):
                     st.session_state.scanned_items = filtered_items
                     st.session_state.step = 3
                     st.rerun()
@@ -545,36 +545,13 @@ if uploaded_file:
                          help="Select at least one item to track")
     
     # ========================================================================
-    # Step 3: SELECT YOUR ITEMS (split bills)
+    # Step 3: SKIP - Auto-select all items and go to pantry
     # ========================================================================
     if st.session_state.get('step') == 3:
-        st.subheader("✅ Select Your Items")
-        st.write("If you're splitting a bill, uncheck items that aren't yours")
-        
-        selected_items = []
-        for i, item in enumerate(st.session_state.scanned_items):
-            is_selected = st.checkbox(f"{item['name']} - {item['price']}", value=True, key=f"item_{i}")
-            if is_selected:
-                selected_items.append(item)
-        
-        st.markdown("---")
-        st.write(f"**You selected {len(selected_items)} of {len(st.session_state.scanned_items)} items**")
-        
-        if selected_items:
-            your_total = sum(float(item['price'].replace('$', '')) for item in selected_items)
-            st.write(f"**Your Total: ${your_total:.2f}**")
-            
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                if st.button("← Back to Filter", use_container_width=True):
-                    st.session_state.step = 2
-                    st.rerun()
-            
-            with col2:
-                if st.button("Next: Organize Pantry →", type="primary", use_container_width=True):
-                    st.session_state.selected_items = selected_items
-                    st.session_state.step = 4
-                    st.rerun()
+        # Auto-select all filtered items and jump to Step 4
+        st.session_state.selected_items = st.session_state.scanned_items
+        st.session_state.step = 4
+        st.rerun()
     
     # ========================================================================
     # Step 4: ORGANIZE INTO FRIDGE/SHELF
@@ -599,7 +576,7 @@ if uploaded_file:
                     if item['category'] != 'unknown':
                         st.caption(f"📚 {item['category'].capitalize()}")
                     
-                    btn_col1, btn_col2 = st.columns(2)
+                    btn_col1, btn_col2, btn_col3 = st.columns(3)
                     with btn_col1:
                         if st.button("→ Fridge", key=f"to_fridge_{idx}", use_container_width=True):
                             item['storage_location'] = 'fridge'
@@ -612,6 +589,11 @@ if uploaded_file:
                             item['storage_location'] = 'shelf'
                             if item['shelf_life_shelf']:
                                 item['expiry_days'] = item['shelf_life_shelf']
+                            st.rerun()
+                    
+                    with btn_col3:
+                        if st.button("Skip ⏭️", key=f"skip_{idx}", use_container_width=True, help="Not a food item"):
+                            item['storage_location'] = 'skipped'
                             st.rerun()
                     
                     st.divider()
@@ -694,7 +676,7 @@ if uploaded_file:
         # Progress bar
         st.markdown("---")
         categorized = sum(1 for item in st.session_state.selected_items 
-                         if item['storage_location'] != 'unsorted')
+                         if item['storage_location'] not in ['unsorted'])
         total = len(st.session_state.selected_items)
         
         st.progress(categorized / total if total > 0 else 0)
@@ -708,7 +690,7 @@ if uploaded_file:
                 st.rerun()
         
         with col2:
-            all_categorized = all(item['storage_location'] != 'unsorted' 
+            all_categorized = all(item['storage_location'] not in ['unsorted'] 
                                  for item in st.session_state.selected_items)
             if all_categorized:
                 if st.button("✅ Save to Pantry", type="primary", use_container_width=True):
@@ -717,9 +699,11 @@ if uploaded_file:
                     
                     with st.expander("📊 View Saved Items"):
                         for item in st.session_state.selected_items:
-                            expiry_date = datetime.now() + timedelta(days=item['expiry_days'])
-                            location_icon = "🧊" if item['storage_location'] == 'fridge' else "🗄️"
-                            st.write(f"{location_icon} {item['name']} - Expires {expiry_date.strftime('%b %d, %Y')}")
+                            # Only show items in fridge/shelf (skip "skipped" items)
+                            if item['storage_location'] in ['fridge', 'shelf']:
+                                expiry_date = datetime.now() + timedelta(days=item['expiry_days'])
+                                location_icon = "🧊" if item['storage_location'] == 'fridge' else "🗄️"
+                                st.write(f"{location_icon} {item['name']} - Expires {expiry_date.strftime('%b %d, %Y')}")
                     
                     if st.button("🔄 Start Over"):
                         # Reset everything
