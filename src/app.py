@@ -344,8 +344,24 @@ def apply_foodkeeper_matching(items):
 # ============================================================================
 
 st.set_page_config(page_title="Smart Pantry Assistant", layout="wide")
-st.title("🥘 Smart Pantry Assistant")
-st.write("Upload your grocery receipt or Walmart screenshots to track your pantry!")
+
+# Start Over button at the top (always accessible)
+col_title, col_reset = st.columns([5, 1])
+with col_title:
+    st.title("🥘 Smart Pantry Assistant")
+    st.write("Upload your grocery receipt or Walmart screenshots to track your pantry!")
+
+with col_reset:
+    # Only show Start Over if we're past step 0
+    if 'step' in st.session_state and st.session_state.step > 0:
+        if st.button("🔄 Start Over", use_container_width=True, type="secondary"):
+            # Clear ALL session state
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            # Reset to initial state
+            st.session_state.step = 0
+            st.session_state.upload_key = 0
+            st.rerun()
 
 # Initialize session state
 if 'raw_items' not in st.session_state:
@@ -379,10 +395,15 @@ if st.session_state.order_type is None:
     st.stop()
 
 # File uploader
+# Initialize upload counter for clearing files
+if 'upload_key' not in st.session_state:
+    st.session_state.upload_key = 0
+
 uploaded_files = st.file_uploader(
     "Upload receipt images (multiple OK)" if st.session_state.order_type == "receipt" else "Upload app screenshots (multiple OK)", 
     type=['png', 'jpg', 'jpeg'], 
-    accept_multiple_files=True
+    accept_multiple_files=True,
+    key=f"file_uploader_{st.session_state.upload_key}"
 )
 uploaded_file = uploaded_files if uploaded_files else None
 
@@ -449,7 +470,8 @@ if uploaded_file:
                 
                 st.success(f"Found {len(items)} items from {len(uploaded_file)} screenshots!")
                 st.rerun()
-    
+
+   
     # ========================================================================
     # Step 1: EDIT ITEMS
     # ========================================================================
@@ -810,12 +832,6 @@ if uploaded_file:
                                 expiry_date = datetime.now() + timedelta(days=item['expiry_days'])
                                 location_icon = "🧊" if item['storage_location'] == 'fridge' else "🗄️"
                                 st.write(f"{location_icon} {item['name']} - Expires {expiry_date.strftime('%b %d, %Y')}")
-                    
-                    if st.button("🔄 Start Over"):
-                        # Reset ALL session state
-                        for key in list(st.session_state.keys()):
-                            del st.session_state[key]
-                        st.rerun()
             else:
                 st.button("✅ Save to Pantry", disabled=True, 
                          help="Please organize all items first!")
