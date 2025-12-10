@@ -1,6 +1,6 @@
 import streamlit as st
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 import re
 import json
 from datetime import datetime, timedelta
@@ -25,6 +25,25 @@ def load_foodkeeper():
         return {}
 
 FOODKEEPER = load_foodkeeper()
+
+def preprocess_image(image):
+    """Enhance image for better OCR"""
+    # Convert to grayscale
+    image = image.convert('L')
+    
+    # Increase contrast
+    enhancer = ImageEnhance.Contrast(image)
+    image = enhancer.enhance(2.0)
+    
+    # Increase sharpness
+    enhancer = ImageEnhance.Sharpness(image)
+    image = enhancer.enhance(2.0)
+    
+    # Increase brightness slightly
+    enhancer = ImageEnhance.Brightness(image)
+    image = enhancer.enhance(1.2)
+    
+    return image
 
 def fuzzy_match(item_name, threshold=0.6):
     """Match item name to FoodKeeper database using fuzzy string matching"""
@@ -188,46 +207,114 @@ def parse_walmart_order(texts):
     return items, totals
 
 def parse_receipt(text):
-    """Extract items from physical receipt - returns raw items without matching"""
+    """Extract items from physical receipt"""
     items = []
     totals = {}
     lines = text.split('\n')
     
-    for line in lines:
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
         line_lower = line.lower()
         
-        # Skip discounts
-        if 'promotion' in line_lower or re.search(r'-\d+[\.\s]?\d{2}', line):
+        if not line:
+            i += 1
+            continue
+        
+        # Skip junk lines
+        if any(word in line_lower for word in ['you saved', 'regular price', 'subtotal', 'ending in', 'www.', 'register', 'cashier']):
+            i += 1
             continue
         
         # Capture totals
         if 'tax' in line_lower and 'total' not in line_lower:
-            price_match = re.search(r'(\d+[\.\s]\d{2})', line)
+            price_match = re.search(r'(\d{1,4})\.(\d{2})', line)
             if price_match:
-                totals['tax'] = f"${price_match.group(1).replace(' ', '.')}"
+                totals['tax'] = f"${price_match.group(1)}.{price_match.group(2)}"
+            i += 1
+            continue
         
-        elif 'grand total' in line_lower:
-            price_match = re.search(r'(\d+[\.\s]\d{2})', line)
+        if 'total' in line_lower:
+            price_match = re.search(r'(\d{1,4})\.(\d{2})', line)
             if price_match:
-                totals['grand_total'] = f"${price_match.group(1).replace(' ', '.')}"
+                totals['grand_total'] = f"${price_match.group(1)}.{price_match.group(2)}"
+            i += 1
+            continue
         
-        elif 'order total' in line_lower:
-            price_match = re.search(r'(\d+[\.\s]\d{2})', line)
-            if price_match:
-                totals['order_total'] = f"${price_match.group(1).replace(' ', '.')}"
+        # Pattern 1: Everything on same line with proper decimals
+        # "GREEN PEPPER    1.04 @ 1.29  1.34 N"
+        match1 = re.search(r'^(.+?)\s+(\d+\.?\d*)\s*@\s*(\d+\.\d{2})\s+(\d+\.\d{2})\s*[NSTB]', line, re.IGNORECASE)
         
-        # Extract items
-        elif not any(word in line_lower for word in ['savings', 'payment', 'change', 'cash', 'credit', 'debit', 'manager', 'store']):
-            price_match = re.search(r'(\d+[\.\s]\d{2})', line)
-            if price_match:
-                price = price_match.group(1).replace(' ', '.')
-                item_name = line[:price_match.start()].strip()
-                if item_name and len(item_name) > 2:
+        if match1:
+            item_name = match1.group(1).strip()
+            qty = float(match1.group(2))
+            total_price = float(match1.group(4))
+            
+            # Clean item name
+            item_name = re.sub(r'^\d+\s+', '', item_name)
+            
+            if len(item_name) > 2 and any(c.isalpha() for c in item_name):
+                items.append({
+                    'name': item_name,
+                    'price': total_price,
+                    'qty': max(1, int(qty)) if qty >= 1 else 1
+                })
+            i += 1
+            continue
+        
+        # Pattern 2: Everything on same line WITHOUT decimals (OCR missed them)
+        # "1.04 @ 129  134N" - need to add decimals
+        match2 = re.search(r'(\d+\.?\d*)\s*@\s*(\d{3,4})\s+(\d{3,4})\s*[NSTB]', line, re.IGNORECASE)
+        
+        if match2:
+            qty = float(match2.group(1))
+            total_str = match2.group(3)
+            
+            # Add decimal point
+            total_price = float(f"{total_str[:-2]}.{total_str[-2:]}")
+            
+            # Look for item name in PREVIOUS line
+            if i > 0:
+                item_name = lines[i-1].strip()
+                item_name = re.sub(r'^\d+\s+', '', item_name)
+                item_name = re.sub(r'[:\.].*$', '', item_name).strip()
+                
+                if len(item_name) > 2 and any(c.isalpha() for c in item_name):
                     items.append({
                         'name': item_name,
-                        'price': float(price),
-                        'qty': 1
+                        'price': total_price,
+                        'qty': max(1, int(qty)) if qty >= 1 else 1
                     })
+            i += 1
+            continue
+        
+        # Pattern 3: Price line with qty@ format (no item name on this line)
+        # "1@ 1299 N" or "2@ 349"
+        match3 = re.search(r'^(\d+)\s*@\s*(\d{3,4})\s*[NSTB]?', line, re.IGNORECASE)
+        
+        if match3:
+            qty = int(match3.group(1))
+            price_str = match3.group(2)
+            
+            # Add decimal
+            total_price = float(f"{price_str[:-2]}.{price_str[-2:]}")
+            
+            # Item name from PREVIOUS line
+            if i > 0:
+                item_name = lines[i-1].strip()
+                item_name = re.sub(r'^\d+\s+', '', item_name)
+                item_name = re.sub(r'[:\.].*$', '', item_name).strip()
+                
+                if len(item_name) > 2 and any(c.isalpha() for c in item_name):
+                    items.append({
+                        'name': item_name,
+                        'price': total_price,
+                        'qty': qty
+                    })
+            i += 1
+            continue
+        
+        i += 1
     
     return items, totals
 
@@ -275,6 +362,7 @@ if 'order_type' not in st.session_state:
     st.session_state.order_type = None
 
 # Step 0: Choose order type
+
 st.subheader("📱 What type of order?")
 col1, col2 = st.columns(2)
 
@@ -291,30 +379,48 @@ if st.session_state.order_type is None:
     st.stop()
 
 # File uploader
-if st.session_state.order_type == "receipt":
-    uploaded_file = st.file_uploader("Choose a receipt image", type=['png', 'jpg', 'jpeg'])
-else:
-    uploaded_files = st.file_uploader("Upload app screenshots (multiple OK)", 
-                                      type=['png', 'jpg', 'jpeg'], 
-                                      accept_multiple_files=True)
-    uploaded_file = uploaded_files if uploaded_files else None
+uploaded_files = st.file_uploader(
+    "Upload receipt images (multiple OK)" if st.session_state.order_type == "receipt" else "Upload app screenshots (multiple OK)", 
+    type=['png', 'jpg', 'jpeg'], 
+    accept_multiple_files=True
+)
+uploaded_file = uploaded_files if uploaded_files else None
 
 if uploaded_file:
     # Scan receipts
     if st.session_state.order_type == "receipt":
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Your Receipt", width=400)
+        st.write(f"📸 {len(uploaded_file)} receipt images uploaded")
         
-        if st.button("Scan Receipt"):
-            with st.spinner("Reading receipt..."):
-                text = pytesseract.image_to_string(image)
-                items, totals = parse_receipt(text)
+        with st.expander("Preview receipts"):
+            cols = st.columns(min(3, len(uploaded_file)))
+            for idx, img_file in enumerate(uploaded_file):
+                img = Image.open(img_file)
+                with cols[idx % 3]:
+                    st.image(img, caption=f"Receipt {idx+1}", use_column_width=True)
+        
+        if st.button("Scan Receipts"):
+            with st.spinner("Reading receipts..."):
+                all_items = []
+                combined_totals = {}
                 
-                st.session_state.raw_items = items
-                st.session_state.totals = totals
+                for img_file in uploaded_file:
+                    image = Image.open(img_file)
+                    processed_image = preprocess_image(image)
+                    text = pytesseract.image_to_string(processed_image)
+                    items, totals = parse_receipt(text)
+                    all_items.extend(items)
+                    
+                    # Combine taxes from multiple receipts
+                    if totals.get('tax'):
+                        tax_val = float(totals['tax'].replace('$', ''))
+                        current_tax = float(combined_totals.get('tax', '$0.00').replace('$', ''))
+                        combined_totals['tax'] = f"${current_tax + tax_val:.2f}"
+                
+                st.session_state.raw_items = all_items
+                st.session_state.totals = combined_totals if combined_totals else {}
                 st.session_state.step = 1
                 
-                st.success(f"Found {len(items)} items!")
+                st.success(f"Found {len(all_items)} items from {len(uploaded_file)} receipts!")
                 st.rerun()
     
     else:  # Walmart
@@ -327,7 +433,7 @@ if uploaded_file:
                 with cols[idx % 3]:
                     st.image(img, caption=f"Image {idx+1}", use_column_width=True)
         
-        if st.button("Scan Walmart Order"):
+        if st.button("Scan Reciept"):
             with st.spinner("Reading screenshots..."):
                 texts = []
                 for img_file in uploaded_file:
