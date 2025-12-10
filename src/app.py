@@ -812,12 +812,9 @@ if uploaded_file:
                                 st.write(f"{location_icon} {item['name']} - Expires {expiry_date.strftime('%b %d, %Y')}")
                     
                     if st.button("🔄 Start Over"):
-                        # Reset everything
-                        st.session_state.step = 0
-                        st.session_state.selected_items = []
-                        st.session_state.raw_items = None
-                        st.session_state.scanned_items = None
-                        st.session_state.order_type = None
+                        # Reset ALL session state
+                        for key in list(st.session_state.keys()):
+                            del st.session_state[key]
                         st.rerun()
             else:
                 st.button("✅ Save to Pantry", disabled=True, 
